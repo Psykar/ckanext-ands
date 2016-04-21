@@ -219,8 +219,8 @@ class DatasetDoiController(PackageController):
             request.params))))
 
         data['dataset_url'] = toolkit.url_for(
-            controller='ckanext.ands.controller:DatasetDoiController',
-            action='dataset_doi',
+            controller='package',
+            action='read',
             id=id,
             qualified=True
         )
