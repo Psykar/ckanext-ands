@@ -8,23 +8,24 @@
 .. image:: https://coveralls.io/repos/Psykar/ckanext-ands/badge.svg
   :target: https://coveralls.io/r/Psykar/ckanext-ands
 
-.. image:: https://pypip.in/download/ckanext-ands/badge.svg
-    :target: https://pypi.python.org/pypi//ckanext-ands/
+
+.. image:: https://img.shields.io/pypi/dm/ckanext-ands.svg
+    :target: https://pypi.python.org/pypi/ckanext-ands/
     :alt: Downloads
 
-.. image:: https://pypip.in/version/ckanext-ands/badge.svg
+.. image:: https://img.shields.io/pypi/v/ckanext-ands.svg
     :target: https://pypi.python.org/pypi/ckanext-ands/
     :alt: Latest Version
 
-.. image:: https://pypip.in/py_versions/ckanext-ands/badge.svg
+.. image:: https://img.shields.io/pypi/pyversions/ckanext-ands.svg
     :target: https://pypi.python.org/pypi/ckanext-ands/
     :alt: Supported Python versions
 
-.. image:: https://pypip.in/status/ckanext-ands/badge.svg
+.. image:: https://img.shields.io/pypi/status/ckanext-ands.svg
     :target: https://pypi.python.org/pypi/ckanext-ands/
     :alt: Development Status
 
-.. image:: https://pypip.in/license/ckanext-ands/badge.svg
+.. image:: https://img.shields.io/pypi/l/ckanext-ands.svg
     :target: https://pypi.python.org/pypi/ckanext-ands/
     :alt: License
 
@@ -32,26 +33,21 @@
 ckanext-ands
 =============
 
-.. Put a description of your extension here:
-   What does it do? What features does it have?
-   Consider including some screenshots or embedding a video!
+Allows submission of ANDS DOI requests for datasets.
 
+Users can submit a DOI request which only sends an email to defined admins.
+Sysadmins can directly add a DOI to a dataset from the Dataset's page via ANDS API.
 
 ------------
 Requirements
 ------------
 
-For example, you might want to mention here which versions of CKAN this
-extension works with.
+Tested with CKAN 2.5.1
 
 
 ------------
 Installation
 ------------
-
-.. Add any additional install steps to the list below.
-   For example installing any non-Python dependencies or adding any required
-   config settings.
 
 To install ckanext-ands:
 
@@ -78,9 +74,23 @@ Config Settings
 
 Document any optional config settings here. For example::
 
-    # The minimum number of hours to wait before re-checking a resource
-    # (optional, default: 24).
-    ckanext.ands.some_setting = some_default_value
+
+    ckanext.ands.DOI_API_KEY = xxyyzz
+    ckanext.ands.shared_secret = asdfasdf
+    # DOI prefix to use for requests, defaults to ANDS default prefix
+    ckanext.ands.doi_prefix = 10.5072/
+    # Email addresses to notify admins of a DOI request, comma separated
+    ckanext.ands.support_emails = example@test.com,example2@test.com
+    # THe publisher to use when submitting to ANDS
+    ckanext.ands.publisher = 'A publisher'
+    # Enable to add &debug=True to the tail of ANDS requests to get a bit more
+    # info back on errors
+    ckanext.ands.debug = False
+    # The client ID proided by ANDS
+    ckanext.ands.client_id = 123123
+    # Set this to a URL you've enabled with ANDS, and requests from localhost will
+    # use this url instead, useful for debugging
+    ckanext.ands.debug_url = http://example.com
 
 
 ------------------------
@@ -162,5 +172,5 @@ To publish a new version to PyPI follow these steps:
    the ``setup.py`` file. For example if the version number in ``setup.py`` is
    0.0.2 then do::
 
-       git tag 0.0.2
+       git tag -a 0.0.2
        git push --tags

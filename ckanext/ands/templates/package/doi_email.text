@@ -1,0 +1,10 @@
+A DOI has been requested
+
+<p><strong>Dataset: </strong> {{ dataset_url }}</p>
+
+<p><strong>Paper Title: </strong> {{ paper_title }}</p>
+<p><strong>Conference Title: </strong>{{ conference_title}}/p>
+<p><strong>Author List: </strong>{{ author_list}}/p>
+<p><strong>DOI Title: </strong>{{ doi_title}}</p>
+<p><strong>DOI Description: </strong>{{ doi_description}}</p>
+<p><strong>Optional Message: </strong>{{ message}}</p>

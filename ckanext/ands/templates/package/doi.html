@@ -1,0 +1,49 @@
+{% import 'macros/form.html' as form %}
+{% extends 'package/base.html' %}
+
+{% set pkg = c.pkg_dict %}
+{% set pkg_dict = c.pkg_dict %}
+
+{% block breadcrumb_content_selected %}{% endblock %}
+
+{% block breadcrumb_content %}
+  {{ super() }}
+  {% if pkg %}
+    <li class="active">{% link_for _('Request DOI'), controller='ckanext.ands.controller:DatasetDoiController', action='dataset_doi', id=pkg.name %}</li>
+  {% endif %}
+{% endblock %}
+
+{% block content_action %}
+  {% link_for _('View dataset'), controller='package', action='read', id=pkg.name, class_='btn', icon='eye-open' %}
+{% endblock %}
+
+{% block content_primary_nav %}
+{% endblock %}
+
+{% block secondary_content %}
+
+{% endblock %}
+
+
+{% block primary_content_inner %}
+
+<form id="dataset-doi" class="dataset-form form-horizontal" method="post" data-module="basic-form">
+  {% for field_name, field_title in fields.iteritems() %}
+    {{ form.input(field_name, id=field_name, label=_(field_title), placeholder=_(field_title), value=data.title, error=errors.title, classes=['control-full', 'control-large'], attrs={'data-module': 'slug-preview-target'}) }}
+  {% endfor %}
+
+
+
+  {% block form_actions %}
+      <div class="form-actions">
+        {% block save_button %}
+          <button class="btn btn-primary" type="submit" name="save">
+            {% block save_button_text %}Submit DOI{% endblock %}
+          </button>
+        {% endblock %}
+        {{ form.required_message() }}
+      </div>
+    {% endblock %}
+  </form>
+
+{% endblock %}
