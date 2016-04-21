@@ -56,7 +56,7 @@ def build_xml(dataset):
         E.creators(E.creator(E.creatorName(author))),
         E.titles(E.title(dataset['title'])),
         E.publisher(publisher),
-        E.publicationYear("".format(package_get_year(dataset))),
+        E.publicationYear("{}".format(package_get_year(dataset))),
         E.language('en'),
         E.resourceType('gDMCP Dataset', resourceTypeGeneral="Dataset"),
         E.descriptions(E.description(dataset['notes'], descriptionType="Abstract")),
