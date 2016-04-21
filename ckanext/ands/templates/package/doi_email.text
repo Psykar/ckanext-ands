@@ -3,8 +3,8 @@ A DOI has been requested
 Dataset:  {{ dataset_url }}
 
 Paper Title:  {{ paper_title }}
-Conference Title: {{ conference_title}}/p>
-Author List: {{ author_list}}/p>
+Conference Title: {{ conference_title}}
+Author List: {{ author_list}}
 DOI Title: {{ doi_title}}
 DOI Description: {{ doi_description}}
 Optional Message: {{ message}}
