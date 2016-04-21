@@ -94,7 +94,7 @@ class DatasetDoiController(PackageController):
             return self.doi_form(id)
 
     def dataset_doi_admin(self, id):
-        dataset_url = toolkit.url_for(
+        xml_url = dataset_url = toolkit.url_for(
             controller='package',
             action='read',
             id=id,
