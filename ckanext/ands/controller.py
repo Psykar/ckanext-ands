@@ -235,3 +235,6 @@ class DatasetDoiController(PackageController):
             extra_vars=data)
 
         mail_recipient('Dataportal support', to_addrs, subject, body)
+
+        h.flash_success("DOI Request sent")
+        return toolkit.redirect_to(data['dataset_url'])
