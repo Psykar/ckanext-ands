@@ -30,16 +30,24 @@ get_action = logic.get_action
 render = base.render
 lookup_package_plugin = ckan.lib.plugins.lookup_package_plugin
 
+doi_request_fields = [
+    'Paper Title',
+    'Conference Or Journal Title',
+    'Author List',
+    'DOI Title',
+    'DOI Description',
+    'Message to Admin (Optional)'
+]
 
 def build_xml(dataset):
     author = dataset['author']
 
-    publisher = config.get('ckanext.ands.publisher')
+    publisher = config['ckanext.ands.publisher']
     # Dev prefix default
     doi_prefix = config.get('ckanext.ands.doi_prefix', '10.5072/')
 
     # TODO what should this be?
-    ands_client_id = config.get('ckanext.ands.client_id')
+    ands_client_id = config['ckanext.ands.client_id']
 
     namespaces = {
         'xsi': "http://www.w3.org/2001/XMLSchema-instance",
@@ -74,16 +82,10 @@ def post_doi_request(dataset_url, contents):
 
     mint_service_url = (
         'https://services.ands.org.au/doi/1.1/mint.json/?app_id={}&url={}&debug={}'.format(
-            app_id, dataset_url, config.get('ckanext.ands.debug')))
+            app_id, dataset_url, config.get('ckanext.ands.debug', False)))
 
-    try:
-        #  Send data
-        resp = requests.post(mint_service_url, data={'xml': contents, 'shared_secret': shared_secret})
-        # Response from server
-        return resp
-    except Exception as e:
-        print e
-    return
+    #  Send data
+    return requests.post(mint_service_url, data={'xml': contents, 'shared_secret': shared_secret})
 
 
 class DatasetDoiController(PackageController):
@@ -149,22 +151,6 @@ class DatasetDoiController(PackageController):
         data_dict = {'id': id, 'include_tracking': True}
 
         # interpret @<revision_id> or @<date> suffix
-        split = id.split('@')
-        if len(split) == 2:
-            data_dict['id'], revision_ref = split
-            if model.is_id(revision_ref):
-                context['revision_id'] = revision_ref
-            else:
-                try:
-                    date = h.date_str_to_datetime(revision_ref)
-                    context['revision_date'] = date
-                except TypeError, e:
-                    abort(400, _('Invalid revision format: %r') % e.args)
-                except ValueError, e:
-                    abort(400, _('Invalid revision format: %r') % e.args)
-        elif len(split) > 2:
-            abort(400, _('Invalid revision format: %r') %
-                  'Too many "@" symbols')
 
         # check if package exists
         try:
@@ -187,14 +173,7 @@ class DatasetDoiController(PackageController):
         template = 'package/doi.html'
         fields = dict(
             (field.lower().replace(' ', '_'), field)
-            for field in [
-                'Paper Title',
-                'Conference Or Journal Title',
-                'Author List',
-                'DOI Title',
-                'DOI Description',
-                'Message to Admin (Optional)'
-            ]
+            for field in doi_request_fields
         )
         try:
             return render(template,
@@ -211,8 +190,6 @@ class DatasetDoiController(PackageController):
                 package_type=package_type, format=format,
                 file=template))
             abort(404, msg)
-
-        assert False, "We should never get here"
 
     def handle_submit(self, id):
         data = clean_dict(dict_fns.unflatten(tuplize_dict(parse_params(
