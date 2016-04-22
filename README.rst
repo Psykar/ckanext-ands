@@ -72,26 +72,31 @@ To install ckanext-ands:
 Config Settings
 ---------------
 
-Document any optional config settings here. For example::
-
+The following are required::
 
     ckanext.ands.DOI_API_KEY = xxyyzz
     ckanext.ands.shared_secret = asdfasdf
-    # DOI prefix to use for requests, defaults to ANDS default prefix
-    ckanext.ands.doi_prefix = 10.5072/
+
     # Email addresses to notify admins of a DOI request, comma separated
     ckanext.ands.support_emails = example@test.com,example2@test.com
+
     # THe publisher to use when submitting to ANDS
     ckanext.ands.publisher = 'A publisher'
-    # Enable to add &debug=True to the tail of ANDS requests to get a bit more
-    # info back on errors
-    ckanext.ands.debug = False
+
     # The client ID proided by ANDS
     ckanext.ands.client_id = 123123
+
     # Set this to a URL you've enabled with ANDS, and requests from localhost will
     # use this url instead, useful for debugging
     ckanext.ands.debug_url = http://example.com
 
+The following are optional (defaults are shown)::
+
+    # DOI prefix to use for requests, defaults to ANDS default prefix
+    ckanext.ands.doi_prefix = 10.5072/
+    # Enable to add &debug=True to the tail of ANDS requests to get a bit more
+    # info back on errors
+    ckanext.ands.debug = False
 
 ------------------------
 Development Installation
