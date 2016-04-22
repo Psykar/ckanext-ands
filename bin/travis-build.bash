@@ -13,6 +13,7 @@ cd ckan
 export latest_ckan_release_branch=`git branch --all | grep remotes/origin/release-v | sort -r | sed 's/remotes\/origin\///g' | head -n 1`
 echo "CKAN branch: $latest_ckan_release_branch"
 git checkout $latest_ckan_release_branch
+pip install --upgrade pip
 python setup.py develop
 pip install -r requirements.txt --allow-all-external
 pip install -r dev-requirements.txt --allow-all-external
