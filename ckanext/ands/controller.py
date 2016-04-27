@@ -1,11 +1,5 @@
 from json import loads
 
-import requests
-from lxml import etree
-from lxml.builder import ElementMaker
-from pylons import config
-from pylons import request
-
 import ckan.lib.base as base
 import ckan.lib.helpers as h
 import ckan.lib.navl.dictization_functions as dict_fns
@@ -13,12 +7,20 @@ import ckan.lib.render
 import ckan.logic as logic
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
+import requests
 from ckan.common import _, c
 from ckan.controllers.package import PackageController
 from ckan.lib.mailer import mail_recipient
 from ckan.logic import clean_dict
 from ckan.logic import parse_params
 from ckan.logic import tuplize_dict
+from ckan.model import Session
+from lxml import etree
+from lxml.builder import ElementMaker
+from pylons import config
+from pylons import request
+
+from ckanext.ands.model import DoiRequest
 from helpers import package_get_year
 
 NotFound = logic.NotFound
@@ -38,6 +40,7 @@ doi_request_fields = [
     'DOI Description',
     'Message to Admin (Optional)'
 ]
+
 
 def build_xml(dataset):
     author = dataset['author']
@@ -88,6 +91,29 @@ def post_doi_request(dataset_url, contents):
     return requests.post(mint_service_url, data={'xml': contents, 'shared_secret': shared_secret})
 
 
+def email_requestors(dataset_id):
+    requests = Session.query(DoiRequest).filter_by(package_id=dataset_id)
+
+    subject = 'DataPortal DOI Request approved'
+    data = {
+        'dataset_url': toolkit.url_for(
+            controller='package',
+            action='read',
+            id=dataset_id,
+            qualified=True)
+    }
+
+    body = base.render(
+        'package/doi_request_completed.text',
+        extra_vars=data)
+
+    for request in requests:
+        user = toolkit.get_action('user_show')(None, {'id': request.user_id})
+        if user['email']:
+            mail_recipient(user['display_name'], user['email'], subject, body)
+
+
+
 class DatasetDoiController(PackageController):
     def dataset_doi(self, id):
         if request.method == 'POST':
@@ -132,6 +158,9 @@ class DatasetDoiController(PackageController):
         if response_code == success_code:
             dataset['doi_id'] = doi
             toolkit.get_action('package_update')(None, dataset)
+
+            email_requestors(dataset['id'])
+
             h.flash_success("DOI Created successfully")
         else:
             type = response_dict["type"]
@@ -148,7 +177,7 @@ class DatasetDoiController(PackageController):
                    'user': c.user or c.author, 'for_view': True,
                    'auth_user_obj': c.userobj}
 
-        data_dict = {'id': id, 'include_tracking': True}
+        data_dict = {'id': id}
 
         # interpret @<revision_id> or @<date> suffix
 
@@ -172,9 +201,23 @@ class DatasetDoiController(PackageController):
         ########################## ADD DOI STUFF ###########################
         template = 'package/doi.html'
         fields = dict(
-            (field.lower().replace(' ', '_'), field)
+            (field.lower().replace(' ', '_').translate(None, '()'), field)
             for field in doi_request_fields
         )
+
+        q = Session.query(DoiRequest).filter_by(package_id=c.pkg_dict['id'], user_id=c.userobj.id)
+        ((request_exists, ),) = Session.query(q.exists())
+        if request_exists:
+            dataset_url = toolkit.url_for(
+                controller='package',
+                action='read',
+                id=id,
+                qualified=True
+            )
+            h.flash_notice("You've already requested a DOI for this dataset. "
+                            "You'll be emailed if it is approved.")
+            return toolkit.redirect_to(dataset_url)
+
         try:
             return render(template,
                           extra_vars={
@@ -213,6 +256,15 @@ class DatasetDoiController(PackageController):
 
         for email in to_addrs:
             mail_recipient('Dataportal support', email, subject, body)
+
+        package = get_action('package_show')(None, {'id': id})
+
+        data['package_id'] = package['id']
+        data['user_id'] = c.userobj.id
+
+        doi_request = DoiRequest(**data)
+        Session.add(doi_request)
+        Session.commit()
 
         h.flash_success("DOI Request sent")
         return toolkit.redirect_to(data['dataset_url'])
