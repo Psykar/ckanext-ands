@@ -1,14 +1,23 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
+from ckan.model import package_table
+
 import helpers as h
+from model import doi_request_table
 
 
 class AndsPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
+    plugins.implements(plugins.IConfigurable)
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.IDatasetForm, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.ITemplateHelpers, inherit=True)
+
+    # IConfigurable
+    def configure(self, config):
+        if package_table.exists():
+            doi_request_table.create(checkfirst=True)
 
     # IConfigurer
 
