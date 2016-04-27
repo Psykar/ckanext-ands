@@ -187,7 +187,7 @@ class TestAndsController(FunctionalTestBase):
                 response = self.app.post(url, extra_environ=env)
 
         assert_equal(mock_mail.mock_calls, [
-            call(u'Mr. Test User', u'test_user_0@ckan.org', 'DataPortal DOI Request approved',
+            call(u'Mr. Test User', user['email'], 'DataPortal DOI Request approved',
                  u'A DOI you requested has been approved\n\nDataset:  http://test.ckan.net/dataset/{}'.format(
                      dataset['id']))])
 
@@ -196,3 +196,30 @@ class TestAndsController(FunctionalTestBase):
         response.mustcontain(no='Approve DOI')
         response.mustcontain(no='Request DOI')
         response.mustcontain('Cite this as')
+
+    def test_already_requested_doi(self):
+        model.repo.rebuild_db()
+        dataset = factories.Dataset(author='test author')
+        user = factories.User()
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        # Should redirect back to dataset page
+        response = self.app.get(url_for(
+            controller='ckanext.ands.controller:DatasetDoiController', action='dataset_doi',
+            id=dataset['name']), extra_environ=env)
+        for field in doi_request_fields:
+            response.mustcontain(field)
+
+        form = response.forms['dataset-doi']
+        for field in form.fields:
+            if field != 'save':
+                form.set(field, 'test')
+
+        with patch.object(ckanext.ands.controller, 'mail_recipient') as mock_mail:
+            response = form.submit('submit', extra_environ=env)
+
+        response = self.app.get(url_for(
+            controller='ckanext.ands.controller:DatasetDoiController', action='dataset_doi',
+            id=dataset['name']), extra_environ=env)
+        response = response.follow()
+        response.mustcontain(
+            "You&#39;ve already requested a DOI for this dataset. You&#39;ll be emailed if it is approved.")
