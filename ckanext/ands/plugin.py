@@ -3,6 +3,7 @@ import ckan.plugins.toolkit as toolkit
 from ckan.model import package_table
 
 import helpers as h
+from auth import package_delete
 from model import doi_request_table
 
 
@@ -13,6 +14,7 @@ class AndsPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
     plugins.implements(plugins.IDatasetForm, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.ITemplateHelpers, inherit=True)
+    plugins.implements(plugins.IAuthFunctions, inherit=True)
 
     # IConfigurable
     def configure(self, config):
@@ -88,4 +90,10 @@ class AndsPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
             'package_get_year': h.package_get_year,
             'now': h.now,
             'get_site_title': h.get_site_title
+        }
+
+    # IAuthFunctions
+    def get_auth_functions(self):
+        return {
+            'package_delete': package_delete
         }

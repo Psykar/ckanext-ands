@@ -223,3 +223,40 @@ class TestAndsController(FunctionalTestBase):
         response = response.follow()
         response.mustcontain(
             "You&#39;ve already requested a DOI for this dataset. You&#39;ll be emailed if it is approved.")
+
+    def test_user_cannot_delete_doi(self):
+        model.repo.rebuild_db()
+        user = factories.User()
+        dataset = factories.Dataset(author='test author', user=user, doi_id='test')
+
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = self.app.get(url_for(
+            controller='package', action='edit',
+            id=dataset['name']), extra_environ=env)
+
+        response.mustcontain(no='Delete')
+
+    def test_user_can_delete_no_doi(self):
+        model.repo.rebuild_db()
+        user = factories.User()
+        dataset = factories.Dataset(author='test author', user=user)
+
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = self.app.get(url_for(
+            controller='package', action='edit',
+            id=dataset['name']), extra_environ=env)
+
+        response.mustcontain('Delete')
+
+    def test_sysadmin_can_delete_doi(self):
+        model.repo.rebuild_db()
+        sysadmin = factories.Sysadmin()
+        dataset = factories.Dataset(author='test author', user=sysadmin, doi_id='test')
+
+        env = {'REMOTE_USER': sysadmin['name'].encode('ascii')}
+        response = self.app.get(url_for(
+            controller='package', action='edit',
+            id=dataset['name']), extra_environ=env)
+
+        response.mustcontain('Delete')
+
