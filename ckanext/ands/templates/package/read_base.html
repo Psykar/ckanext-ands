@@ -3,10 +3,7 @@
 {% block content_action %}
   {% if not pkg.doi_id and not pkg.private %}
     {% if c.userobj.sysadmin %}
-      <form id="dataset-doi-admin" method="post" action="{% url_for controller='ckanext.ands.controller:DatasetDoiController', action='dataset_doi_admin', id=pkg.name %}" style="display:inline">
-        <button class="btn btn-primary" type="submit" name="Approve DOI">
-          <i class="icon-thumbs-up"></i>Approve DOI</button>
-      </form>
+      {% link_for "Approve DOI", controller='ckanext.ands.controller:DatasetDoiController', action='dataset_doi_admin', id=pkg.name, class_='btn' %}
     {% endif %}
     {% link_for _('Request DOI'), controller='ckanext.ands.controller:DatasetDoiController', action='dataset_doi', id=pkg.name, class_='btn', icon='book' %}
   {% endif %}

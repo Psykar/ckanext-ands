@@ -76,7 +76,7 @@ def build_xml(dataset):
     xml.attrib[etree.QName(namespaces['xsi'],
                            'schemaLocation')] = "http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd"
 
-    return etree.tostring(xml)
+    return etree.tostring(xml, pretty_print=True)
 
 
 def post_doi_request(dataset_url, contents):
@@ -113,7 +113,6 @@ def email_requestors(dataset_id):
             mail_recipient(user['display_name'], user['email'], subject, body)
 
 
-
 class DatasetDoiController(PackageController):
     def fail_if_private(self, dataset, dataset_url):
         if dataset['private']:
@@ -127,25 +126,38 @@ class DatasetDoiController(PackageController):
             return self.doi_form(id)
 
     def dataset_doi_admin(self, id):
-        xml_url = dataset_url = toolkit.url_for(
+        dataset_url = toolkit.url_for(
             controller='package',
             action='read',
             id=id,
             qualified=True
         )
-
-        if request.method != 'POST' or not c.userobj.sysadmin:
+        if not c.userobj.sysadmin:
             return toolkit.redirect_to(dataset_url)
 
         dataset = toolkit.get_action('package_show')(None, {'id': id})
 
         self.fail_if_private(dataset, dataset_url)
 
+        if request.method == 'POST':
+            return self.dataset_doi_admin_process(dataset_url, dataset)
+        else:
+            return self.dataset_doi_admin_form(dataset_url, dataset)
+
+    def dataset_doi_admin_form(self, dataset_url, dataset):
+        xml = build_xml(dataset)
+        template = 'package/doi_admin.html'
+        return render(template, extra_vars={'xml': xml, 'dataset_url': dataset_url})
+
+    def dataset_doi_admin_process(self, dataset_url, dataset):
         # If running on local machine, just resolve DOI to the dev server
         if 'localhost' in dataset_url or '127.0.0.1' in dataset_url:
             xml_url = config.get('ckanext.ands.debug_url')
+        else:
+            xml_url = dataset_url
 
-        post_data = build_xml(dataset)
+        post_data = request.POST['xml']
+
         resp = post_doi_request(xml_url, post_data)
         try:
             json = loads(resp.content)

@@ -93,7 +93,7 @@ class TestAndsController(FunctionalTestBase):
         mock_response = Mock(content=json.dumps(dict(response=dict(responsecode='MT001', doi='testdoi'))))
         mock_post = Mock(return_value=mock_response)
         with patch.object(requests, 'post', new=mock_post):
-            response = self.app.post(url, extra_environ=env)
+            response = self.app.post(url, {'xml': 'test'}, extra_environ=env)
 
         # Don't bother checking the mocks, other tests do this
 
@@ -102,6 +102,33 @@ class TestAndsController(FunctionalTestBase):
         response.mustcontain(no='Approve DOI')
         response.mustcontain(no='Request DOI')
         response.mustcontain('Cite this as')
+
+    def test_dataset_doi_admin_sysadmin_verify_xml(self):
+        model.repo.rebuild_db()
+        dataset = factories.Dataset(author='test author')
+        sysadmin = factories.Sysadmin()
+        env = {'REMOTE_USER': sysadmin['name'].encode('ascii')}
+        url = url_for(
+            controller='ckanext.ands.controller:DatasetDoiController', action='dataset_doi_admin',
+            id=dataset['name'])
+        mock_response = Mock(content=json.dumps(dict(response=dict(responsecode='MT001', doi='testdoi'))))
+        mock_post = Mock(return_value=mock_response)
+
+        response = self.app.get(url, extra_environ=env)
+        form = response.forms['dataset-doi']
+        assert_equal(sorted(form.fields.keys()), ['save', 'xml'])
+
+        with patch.object(requests, 'post', new=mock_post):
+            response = form.submit('submit', extra_environ=env)
+
+        # Don't bother checking the mocks, other tests do this
+
+        response = response.follow(extra_environ=env)
+        # Shouldn't appear as already created
+        response.mustcontain(no='Approve DOI')
+        response.mustcontain(no='Request DOI')
+        response.mustcontain('Cite this as')
+
 
     def test_dataset_doi_admin_non_sysadmin(self):
         model.repo.rebuild_db()
@@ -184,7 +211,7 @@ class TestAndsController(FunctionalTestBase):
         mock_post = Mock(return_value=mock_response)
         with patch.object(requests, 'post', new=mock_post):
             with patch.object(ckanext.ands.controller, 'mail_recipient') as mock_mail:
-                response = self.app.post(url, extra_environ=env)
+                response = self.app.post(url, {'xml': 'test'}, extra_environ=env)
 
         assert_equal(mock_mail.mock_calls, [
             call(u'Mr. Test User', user['email'], 'DataPortal DOI Request approved',
