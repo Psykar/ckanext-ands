@@ -273,3 +273,51 @@ class TestAndsController(FunctionalTestBase):
 
         response.mustcontain(no='Approve DOI')
         response.mustcontain(no='Request DOI')
+
+    def test_controller_private_admin(self):
+        model.repo.rebuild_db()
+        sysadmin = factories.Sysadmin()
+        org = factories.Organization()
+        dataset = factories.Dataset(author='test author', user=sysadmin, owner_org=org['id'], private=True)
+
+        env = {'REMOTE_USER': sysadmin['name'].encode('ascii')}
+        response = self.app.post(url_for(
+            controller='ckanext.ands.controller:DatasetDoiController', action='dataset_doi_admin',
+            id=dataset['name']), extra_environ=env)
+
+        response = response.follow(extra_environ=env)
+        response.mustcontain("Cannot add a DOI to a private dataset")
+        response.mustcontain(no='Approve DOI')
+        response.mustcontain(no='Request DOI')
+
+    def test_controller_private(self):
+        model.repo.rebuild_db()
+        sysadmin = factories.Sysadmin()
+        org = factories.Organization()
+        dataset = factories.Dataset(author='test author', user=sysadmin, owner_org=org['id'], private=True)
+
+        env = {'REMOTE_USER': sysadmin['name'].encode('ascii')}
+        response = self.app.get(url_for(
+            controller='ckanext.ands.controller:DatasetDoiController', action='dataset_doi',
+            id=dataset['name']), extra_environ=env)
+
+        response = response.follow(extra_environ=env)
+        response.mustcontain("Cannot add a DOI to a private dataset")
+        response.mustcontain(no='Approve DOI')
+        response.mustcontain(no='Request DOI')
+
+    def test_controller_private_submit(self):
+        model.repo.rebuild_db()
+        sysadmin = factories.Sysadmin()
+        org = factories.Organization()
+        dataset = factories.Dataset(author='test author', user=sysadmin, owner_org=org['id'], private=True)
+
+        env = {'REMOTE_USER': sysadmin['name'].encode('ascii')}
+        response = self.app.post(url_for(
+            controller='ckanext.ands.controller:DatasetDoiController', action='dataset_doi',
+            id=dataset['name']), extra_environ=env)
+
+        response = response.follow(extra_environ=env)
+        response.mustcontain("Cannot add a DOI to a private dataset")
+        response.mustcontain(no='Approve DOI')
+        response.mustcontain(no='Request DOI')

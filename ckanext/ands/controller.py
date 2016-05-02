@@ -115,6 +115,11 @@ def email_requestors(dataset_id):
 
 
 class DatasetDoiController(PackageController):
+    def fail_if_private(self, dataset, dataset_url):
+        if dataset['private']:
+            h.flash_error("Cannot add a DOI to a private dataset")
+            toolkit.redirect_to(dataset_url)
+
     def dataset_doi(self, id):
         if request.method == 'POST':
             return self.handle_submit(id)
@@ -133,6 +138,8 @@ class DatasetDoiController(PackageController):
             return toolkit.redirect_to(dataset_url)
 
         dataset = toolkit.get_action('package_show')(None, {'id': id})
+
+        self.fail_if_private(dataset, dataset_url)
 
         # If running on local machine, just resolve DOI to the dev server
         if 'localhost' in dataset_url or '127.0.0.1' in dataset_url:
@@ -178,6 +185,12 @@ class DatasetDoiController(PackageController):
                    'auth_user_obj': c.userobj}
 
         data_dict = {'id': id}
+        dataset_url = toolkit.url_for(
+            controller='package',
+            action='read',
+            id=id,
+            qualified=True
+        )
 
         # interpret @<revision_id> or @<date> suffix
 
@@ -189,6 +202,8 @@ class DatasetDoiController(PackageController):
             abort(404, _('Dataset not found'))
         except NotAuthorized:
             abort(401, _('Unauthorized to read package %s') % id)
+
+        self.fail_if_private(c.pkg_dict, dataset_url)
 
         # used by disqus plugin
         c.current_package_id = c.pkg.id
@@ -208,12 +223,6 @@ class DatasetDoiController(PackageController):
         q = Session.query(DoiRequest).filter_by(package_id=c.pkg_dict['id'], user_id=c.userobj.id)
         ((request_exists, ),) = Session.query(q.exists())
         if request_exists:
-            dataset_url = toolkit.url_for(
-                controller='package',
-                action='read',
-                id=id,
-                qualified=True
-            )
             h.flash_notice("You've already requested a DOI for this dataset. "
                             "You'll be emailed if it is approved.")
             return toolkit.redirect_to(dataset_url)
@@ -245,6 +254,9 @@ class DatasetDoiController(PackageController):
             qualified=True
         )
 
+        package = get_action('package_show')(None, {'id': id})
+        self.fail_if_private(package, data['dataset_url'])
+
         # Comma separated config var
         to_addrs = config['ckanext.ands.support_emails'].split(',')
 
@@ -256,8 +268,6 @@ class DatasetDoiController(PackageController):
 
         for email in to_addrs:
             mail_recipient('Dataportal support', email, subject, body)
-
-        package = get_action('package_show')(None, {'id': id})
 
         data['package_id'] = package['id']
         data['user_id'] = c.userobj.id
