@@ -260,3 +260,16 @@ class TestAndsController(FunctionalTestBase):
 
         response.mustcontain('Delete')
 
+    def test_private_hides_doi(self):
+        model.repo.rebuild_db()
+        sysadmin = factories.Sysadmin()
+        org = factories.Organization()
+        dataset = factories.Dataset(author='test author', user=sysadmin, owner_org=org['id'], private=True)
+
+        env = {'REMOTE_USER': sysadmin['name'].encode('ascii')}
+        response = self.app.get(url_for(
+            controller='package', action='read',
+            id=dataset['name']), extra_environ=env)
+
+        response.mustcontain(no='Approve DOI')
+        response.mustcontain(no='Request DOI')
