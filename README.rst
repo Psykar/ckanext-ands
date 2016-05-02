@@ -5,8 +5,8 @@
 .. image:: https://travis-ci.org/Psykar/ckanext-ands.svg?branch=master
     :target: https://travis-ci.org/Psykar/ckanext-ands
 
-.. image:: https://coveralls.io/repos/Psykar/ckanext-ands/badge.svg
-  :target: https://coveralls.io/r/Psykar/ckanext-ands
+.. image:: https://codecov.io/github/Psykar/ckanext-ands/badge.svg
+  :target: https://codecov.io/github/Psykar/ckanext-ands
 
 
 .. image:: https://img.shields.io/pypi/dm/ckanext-ands.svg

@@ -5,7 +5,7 @@ python:
 env: PGVERSION=9.1
 install:
     - bash bin/travis-build.bash
-    - pip install --upgrade coveralls
+    - pip install --upgrade codecov
 script: sh bin/travis-run.sh
 after_success:
-    - coveralls
+    - codecov
