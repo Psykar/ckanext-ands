@@ -89,7 +89,8 @@ class AndsPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
         return {
             'package_get_year': h.package_get_year,
             'now': h.now,
-            'get_site_title': h.get_site_title
+            'get_site_title': h.get_site_title,
+            'can_request_doi': h.can_request_doi,
         }
 
     # IAuthFunctions

@@ -204,8 +204,6 @@ class DatasetDoiController(PackageController):
             qualified=True
         )
 
-        # interpret @<revision_id> or @<date> suffix
-
         # check if package exists
         try:
             c.pkg_dict = get_action('package_show')(context, data_dict)

@@ -5,7 +5,9 @@
     {% if c.userobj.sysadmin %}
       {% link_for "Approve DOI", controller='ckanext.ands.controller:DatasetDoiController', action='dataset_doi_admin', id=pkg.name, class_='btn' %}
     {% endif %}
-    {% link_for _('Request DOI'), controller='ckanext.ands.controller:DatasetDoiController', action='dataset_doi', id=pkg.name, class_='btn', icon='book' %}
+    {% if h.can_request_doi(pkg) %}
+      {% link_for _('Request DOI'), controller='ckanext.ands.controller:DatasetDoiController', action='dataset_doi', id=pkg.name, class_='btn', icon='book' %}
+    {% endif %}
   {% endif %}
   {% if h.check_access('package_update', {'id':pkg.id }) %}
     {% link_for _('Manage'), controller='package', action='edit', id=pkg.name, class_='btn', icon='wrench' %}

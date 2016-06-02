@@ -59,15 +59,40 @@ class TestAndsController(FunctionalTestBase):
 
         assert_equal(mock_post.mock_calls, expected)
 
-    def test_dataset_has_doi_request_non_sysadmin(self):
+    def test_dataset_has_doi_request_no_user(self):
         model.repo.rebuild_db()
         dataset = factories.Dataset(author='test author')
         response = self.app.get(url_for(
             controller='package', action='read',
             id=dataset['name']))
-        response.mustcontain('Request DOI')
+        response.mustcontain(no='Request DOI')
         response.mustcontain(no='Approve DOI')
         response.mustcontain(no='Cite this as')
+
+    def test_dataset_has_doi_request_normal_user(self):
+        model.repo.rebuild_db()
+        user = factories.User()
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        organization = factories.Organization()
+        dataset = factories.Dataset(author='test author', owner_ord=organization['id'])
+        response = self.app.get(url_for(
+            controller='package', action='read',
+            id=dataset['name']), extra_environ=env)
+        response.mustcontain(no='Request DOI')
+        response.mustcontain(no='Approve DOI')
+        response.mustcontain(no='Cite this as')
+
+
+    def test_dataset_has_doi_request_group_member(self):
+        model.repo.rebuild_db()
+        user = factories.User()
+        organization = factories.Organization(users=[{'name': user['id'], 'capacity': 'member'}])
+        dataset = factories.Dataset(author='test author', owner_org=organization['id'])
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = self.app.get(url_for(
+            controller='package', action='read',
+            id=dataset['name']), extra_environ=env)
+        response.mustcontain('Request DOI')
 
     def test_dataset_has_doi_approve_sysadmin(self):
         model.repo.rebuild_db()
@@ -81,6 +106,7 @@ class TestAndsController(FunctionalTestBase):
         response.mustcontain('Request DOI')
         response.mustcontain('Approve DOI')
         response.mustcontain(no='Cite this as')
+
 
     def test_dataset_doi_admin_sysadmin(self):
         model.repo.rebuild_db()
@@ -143,7 +169,8 @@ class TestAndsController(FunctionalTestBase):
         response = response.follow(extra_environ=env)
         response.mustcontain(no='Approve DOI')
         response.mustcontain(no='Cite this as')
-        response.mustcontain('Request DOI')
+        # Cannot request a DOI unless member of the correct group
+        response.mustcontain(no='Request DOI')
 
     def test_dataset_doi_request(self):
         model.repo.rebuild_db()
@@ -227,7 +254,7 @@ class TestAndsController(FunctionalTestBase):
     def test_already_requested_doi(self):
         model.repo.rebuild_db()
         dataset = factories.Dataset(author='test author')
-        user = factories.User()
+        user = factories.Sysadmin()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         # Should redirect back to dataset page
         response = self.app.get(url_for(
@@ -247,7 +274,7 @@ class TestAndsController(FunctionalTestBase):
         response = self.app.get(url_for(
             controller='ckanext.ands.controller:DatasetDoiController', action='dataset_doi',
             id=dataset['name']), extra_environ=env)
-        response = response.follow()
+        response = response.follow(extra_environ=env)
         response.mustcontain(
             "You&#39;ve already requested a DOI for this dataset. You&#39;ll be emailed if it is approved.")
 
