@@ -94,6 +94,16 @@ class TestAndsController(FunctionalTestBase):
             id=dataset['name']), extra_environ=env)
         response.mustcontain('Request DOI')
 
+    def test_dataset_has_doi_request_own_dataset(self):
+        model.repo.rebuild_db()
+        user = factories.User()
+        dataset = factories.Dataset(author='test author', user=user)
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = self.app.get(url_for(
+            controller='package', action='read',
+            id=dataset['name']), extra_environ=env)
+        response.mustcontain('Request DOI')
+
     def test_dataset_has_doi_approve_sysadmin(self):
         model.repo.rebuild_db()
         dataset = factories.Dataset(author='test author')
